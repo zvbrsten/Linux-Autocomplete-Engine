@@ -1,135 +1,96 @@
-# Autocomplete Daemon
+# Linux System-Wide Autocomplete Daemon (C++)
 
-A **high-performance**, **non-intrusive** global autocomplete daemon for the Linux desktop environment.  
-This project uses a **radix trie with compressed edges**, an integrated **min-heap for top suggestions**, and a **memory-mapped blob** for ultra-fast startup and minimal memory usage.  
-It monitors keystrokes globally via the **X11 `RECORD` extension** and injects completions using the **X11 `XTest` extension**.
-
----
-
-## Why This Project
-
-Most autocomplete systems either:
-
-- **Scan through large word lists** — too slow for real-time typing.  
-- **Use standard tries** — better complexity, but still heavy on memory and pointer traversal.  
-- **Depend on AI/ML models** — powerful, but resource-heavy and slow for background use.
-
-Our approach achieves:
-
-- **Theoretical Complexity:** \(O(L)\) lookups — matching a trie, but with drastically lower constant factors.  
-- **Practical Speedup:** 2–5× faster in real-world tests on million-word corpora.  
-- **Memory Savings:** 30–50% less RAM than a standard trie.  
-- **Instant Startup:** Memory-mapped dictionary loads instantly, no warm-up needed.
+A system-wide autocomplete engine for Linux that completes words based on a typed prefix when a hotkey is pressed.
+It runs as a lightweight background daemon, has no GUI, and works across all X11 applications including terminals, editors, and browsers.
 
 ---
 
-## Features
+## What This Project Does
 
-- **Global and Non-Intrusive** — Works across all applications without stealing focus.  
-- **Sub-Millisecond Suggestions** — Radix trie reduces traversal steps by skipping multiple characters at once.  
-- **Resource Efficient** — Small memory footprint, low CPU usage, suitable for 24/7 background running.  
-- **Customizable Vocabulary** — Build from any text corpus for domain-specific autocomplete.  
-- **Interactive Suggestions** — Cycle through the top 3 completions with the `Tab` key.
+- Listens to global keyboard input on Linux
+- Tracks the current word prefix in real time
+- On hotkey press, autocompletes the word in the active window
+- Works across all applications without focus stealing or application integration
+
+---
+
+## Demo
+
+Add a short GIF or video here showing autocomplete working in multiple applications.
 
 ---
 
 ## How It Works
 
-1. **Data Preprocessing**  
-   - `build_trie_blob` processes your corpus (`corpus.txt`) into a serialized binary (`words_blob.dat`).
-   - Words are pre-sorted to minimize node splits during trie construction.
-
-2. **Daemon Runtime**  
-   - `daemon` listens for keystrokes using X11 `RECORD`.
-   - As you type, it matches the prefix in the radix trie.
-   - Top-k completions are pre-ranked in a min-heap.
-   - Completion is injected using X11 `XTest`.
+1. Global keystroke capture using the X11 RECORD extension
+2. Prefix matching using a compressed radix trie
+3. Instant suggestion selection using precomputed top-K results
+4. Text injection into the active window using X11 XTest
 
 ---
 
-## Complexity Contrast
+## Technical Highlights
 
-| Method | Lookup Complexity | Real-World Bottlenecks | Build Complexity | Why It’s Slower |
-|--------|------------------|------------------------|------------------|-----------------|
-| **Naive Prefix Search (List Filter)** | \(O(N \cdot L)\) | Compares every word for each query | \(O(N \cdot L)\) | Linear scan of large lists |
-| **Hash Map of Words per Prefix** | \(O(L + P)\) | Prefix collisions, large \(P\) for common prefixes | \(O(N \cdot L)\) | Heavy memory usage, extra sorting |
-| **Standard Trie** | \(O(L)\) | One char per node → many pointer hops | \(O(\Sigma N L)\) | Node explosion on large vocab |
-| **Our Radix Trie + Heap + mmap** | \(O(L)\) (lower constant factors) | None significant — edges are compressed | \(O(N \cdot L)\) (sorted input) | Compressed edges, fewer nodes, hot-cache hits |
-
-**Legend:**  
-- \(N\) = number of words  
-- \(L\) = average word length  
-- \(P\) = number of candidates for a prefix  
-- \(\Sigma\) = alphabet size
+- Radix trie (compressed trie) for fast prefix lookup
+- Memory-mapped dictionary (mmap) for near-instant startup
+- Top-K suggestions per node for constant-time completion
+- Non-intrusive design with no input grabs or focus changes
 
 ---
 
-## Installation
+## Performance Characteristics
 
-### Prerequisites
+- Prefix lookup complexity: O(L)
+- Lower memory footprint compared to a standard trie
+- Suitable for continuous background execution
 
-- C++17 compiler (e.g., `g++`)
-- X11 development libraries:
-  - `libx11-dev`
-  - `libxtst-dev`
-  - `libxext-dev`
+---
 
-Install on Debian/Ubuntu:
+## Build
 
-```bash
-sudo apt-get install build-essential libx11-dev libxtst-dev libxext-dev
-```
-
-### Build
-
-```bash
-make clean
 make
-```
 
 ---
 
-## Running
+## Run
 
-> Root privileges are required for global input monitoring.
-
-```bash
 sudo ./daemon
-```
-
-To stop:
-
-```bash
-sudo pkill daemon
-```
-
----
-
-## Technical Optimizations
-
-- **Radix Trie Compression** — Merges single-child chains to reduce node count.
-- **Pre-Sorted Batch Insertion** — Minimizes splits and improves build time.
-- **Top-K Min-Heap** — Stores the most relevant completions at each node for instant retrieval.
-- **Memory Mapping (mmap)** — Allows zero-copy loading of large corpora.
-- **Passive XRecord Monitoring** — Low-overhead global keystroke capture without input grabs.
 
 ---
 
 ## Project Structure
 
-```
-.
-├── daemon_xrecord.cpp       # Main daemon logic
-├── MMapTrieLoader.cpp       # Trie loader implementation
-├── MMapTrieLoader.h         # Loader header
-├── build_trie_blob.cpp      # Corpus preprocessing tool
-├── corpus.txt               # Example corpus
-├── Makefile                 # Build automation
-└── README.md                # Documentation
-```
+├── daemon_xrecord.cpp     # Global key listener and text injection  
+├── build_trie_blob.cpp    # Dictionary preprocessing tool  
+├── MMapTrieLoader.cpp     # Memory-mapped trie loader  
+├── MMapTrieLoader.h  
+├── corpus.txt             # Example vocabulary  
+├── Makefile  
+└── README.md  
+
+---
+
+## Why No GUI?
+
+This project intentionally avoids a GUI to focus on:
+
+- System-level keyboard interception
+- Low-latency autocomplete logic
+- Application-agnostic behavior
+
+A GUI layer can be added on top later if needed.
+
+---
+
+## Possible Extensions
+
+- GUI suggestion popup
+- Adaptive learning from user typing patterns
+- Configurable hotkeys
+- Wayland support
 
 ---
 
 ## License
 
-MIT License.
+MIT License
