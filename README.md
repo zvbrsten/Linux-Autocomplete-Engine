@@ -18,6 +18,7 @@ It runs as a lightweight background daemon, has no GUI, and works across all X11
 
 <img width="830" height="568" alt="image" src="https://github.com/user-attachments/assets/008c2eae-e24a-4dc8-a96e-8e7cbca18d84" />
 
+video demo:https://drive.google.com/file/d/1P6DnqR_j8rX4Q2K2mRT_UgJTZj0w7neS/view?usp=sharing
 
 ---
 
