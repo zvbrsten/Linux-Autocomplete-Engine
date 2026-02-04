@@ -16,7 +16,8 @@ It runs as a lightweight background daemon, has no GUI, and works across all X11
 
 ## Demo
 
-Add a short GIF or video here showing autocomplete working in multiple applications.
+<img width="830" height="568" alt="image" src="https://github.com/user-attachments/assets/008c2eae-e24a-4dc8-a96e-8e7cbca18d84" />
+
 
 ---
 
